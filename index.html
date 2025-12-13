@@ -136,8 +136,9 @@
             <button onclick="setDifficulty(1, this)" class="btn-difficulty bg-wood-700 hover:bg-wood-600 text-parchment-100 py-1 px-3 md:py-2 md:px-4 rounded border border-wood-600 text-sm md:text-base">Batata (1)</button>
             <button onclick="setDifficulty(6, this)" class="btn-difficulty bg-wood-700 hover:bg-wood-600 text-parchment-100 py-1 px-3 md:py-2 md:px-4 rounded border border-wood-600 text-sm md:text-base active">Fácil (6)</button>
             <button onclick="setDifficulty(12, this)" class="btn-difficulty bg-wood-700 hover:bg-wood-600 text-parchment-100 py-1 px-3 md:py-2 md:px-4 rounded border border-wood-600 text-sm md:text-base">Médio (12)</button>
-            <button onclick="setDifficulty(18, this)" class="btn-difficulty bg-wood-700 hover:bg-wood-600 text-parchment-100 py-1 px-3 md:py-2 md:px-4 rounded border border-wood-600 text-sm md:text-base">Difícil (18)</button>
-            <button onclick="setDifficulty(23, this)" class="btn-difficulty bg-wood-700 hover:bg-wood-600 text-parchment-100 py-1 px-3 md:py-2 md:px-4 rounded border border-wood-600 text-sm md:text-base">Lenda (Todos)</button>
+            <!-- BOTÃO ATUALIZADO: Difícil agora é 16 pares -->
+            <button onclick="setDifficulty(16, this)" class="btn-difficulty bg-wood-700 hover:bg-wood-600 text-parchment-100 py-1 px-3 md:py-2 md:px-4 rounded border border-wood-600 text-sm md:text-base">Difícil (16)</button>
+            <button onclick="setDifficulty(20, this)" class="btn-difficulty bg-wood-700 hover:bg-wood-600 text-parchment-100 py-1 px-3 md:py-2 md:px-4 rounded border border-wood-600 text-sm md:text-base">Lenda (20)</button>
         </div>
 
         <div class="flex justify-center gap-6 bg-wood-800 p-4 md:p-6 rounded-sm shadow-xl mx-auto w-fit border-2 border-wood-600 relative">
@@ -258,17 +259,27 @@
                 boardElement.classList.add('grid-cols-4');
             } else if (totalCards <= 24) {
                 boardElement.classList.add('grid-cols-4', 'md:grid-cols-6');
-            } else if (totalCards <= 36) {
-                boardElement.classList.add('grid-cols-5', 'md:grid-cols-6');
+            } else if (totalCards <= 32) {
+                // ATUALIZADO: 16 pares (32 cartas) -> 4x8 no mobile, 8x4 no desktop.
+                // Isso garante um layout perfeito.
+                boardElement.classList.add('grid-cols-4', 'md:grid-cols-8');
             } else {
-                boardElement.classList.add('grid-cols-4', 'sm:grid-cols-6', 'md:grid-cols-8');
+                // Lenda (40 cartas) -> 8x5
+                boardElement.classList.add('grid-cols-4', 'sm:grid-cols-5', 'md:grid-cols-8');
             }
         }
 
         function initGame() {
             // Garante que não pede mais pares do que existem
             const safePairs = Math.min(totalPairs, cardItems.length);
-            const selectedItems = cardItems.slice(0, safePairs);
+            
+            // --- SORTEIO ALEATÓRIO DE CARTAS ---
+            // 1. Criamos uma cópia da lista original para não a estragar
+            let gameCandidates = [...cardItems];
+            // 2. Embaralhamos essa lista COMPLETA
+            shuffleArray(gameCandidates);
+            // 3. Pegamos apenas o número necessário de pares
+            const selectedItems = gameCandidates.slice(0, safePairs);
             
             adjustGrid();
             matchedPairs = 0;
