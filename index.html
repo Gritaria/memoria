@@ -291,11 +291,12 @@
         function createCardElement(item, index) {
             const card = document.createElement('div');
             
-            // Ajuste de tamanho para o modo Batata
+            // Ajuste de tamanho para o modo Batata e uso de aspect-square para garantir quadrado
             if (totalPairs === 1) {
-                card.classList.add('card', 'w-32', 'h-40');
+                card.classList.add('card', 'w-40', 'aspect-square');
             } else {
-                card.classList.add('card', 'h-20', 'sm:h-24', 'md:h-28'); 
+                // Removemos alturas fixas e usamos aspect-square
+                card.classList.add('card', 'aspect-square'); 
             }
             
             card.dataset.index = index;
