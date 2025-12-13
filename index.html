@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo da Memória - Dus Guri (Velho Oeste)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fontes Western: Rye para títulos, Courier Prime para texto -->
+    <link href="https://fonts.googleapis.com/css2?family=Rye&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        wood: {
+                            900: '#261C15', // Fundo muito escuro
+                            800: '#3E2723', // Madeira escura
+                            700: '#5D4037', // Madeira média
+                            600: '#8D6E63', // Madeira clara
+                        },
+                        parchment: {
+                            100: '#FDF5E6', // Papel velho claro
+                            200: '#F3E5AB', // Papel velho escuro
+                        },
+                        gold: {
+                            500: '#FFB300', // Ouro Western
+                            600: '#FFA000',
+                        }
+                    },
+                    fontFamily: {
+                        western: ['"Rye"', 'serif'],
+                        typewriter: ['"Courier Prime"', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Courier Prime', monospace;
+            background-color: #1a120b; /* Fundo quase preto */
+            background-image: radial-gradient(#2c1e16 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        
+        /* Efeito de Virar a Carta */
+        .card {
+            perspective: 1000px;
+            cursor: pointer;
+        }
+        
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+        
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+        }
+        
+        /* Verso da carta (O que se vê antes de virar) - Estilo Madeira/Couro */
+        .card-front {
+            background: linear-gradient(135deg, #3E2723 0%, #261C15 100%);
+            border: 2px solid #8D6E63;
+            /* Removido estilo de fonte pois agora é imagem */
+        }
+        
+        /* Frente da carta (A imagem) - Estilo Papel Velho */
+        .card-back {
+            background-color: #F3E5AB; /* Cor de pergaminho */
+            transform: rotateY(180deg);
+            border: 4px solid #F3E5AB; /* Moldura interna */
+            /* Textura sutil de papel */
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23d4c596' fill-opacity='0.2' fill-rule='evenodd'/%3E%3C/svg%3E");
+        }
+
+        .card.matched .card-back {
+            border-color: #FFB300;
+            box-shadow: 0 0 15px rgba(255, 179, 0, 0.4);
+        }
+
+        /* Animação de vitória */
+        @keyframes pop {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .modal-content {
+            animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h40v40H0V0zm20 20h20v20H20V20zM0 20h20v20H0V20z' fill='%23261C15' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+        }
+        
+        .sepia-img {
+            filter: sepia(0.3) contrast(1.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-8 px-4 select-none text-wood-900">
+
+    <!-- Cabeçalho -->
+    <header class="text-center mb-8 w-full max-w-4xl">
+        <h1 class="text-5xl md:text-6xl font-western text-gold-500 mb-2 drop-shadow-md tracking-wider">WANTED</h1>
+        <p class="text-gray-400 text-xl font-typewriter tracking-widest uppercase border-b border-wood-700 inline-block pb-1">Recompensa: Dus Guri</p>
+        
+        <div class="flex justify-center gap-6 mt-8 bg-wood-800 p-6 rounded-sm shadow-xl mx-auto w-fit border-2 border-wood-600 relative">
+            <!-- "Pregos" nos cantos do painel -->
+            <div class="absolute top-2 left-2 w-2 h-2 rounded-full bg-wood-600"></div>
+            <div class="absolute top-2 right-2 w-2 h-2 rounded-full bg-wood-600"></div>
+            <div class="absolute bottom-2 left-2 w-2 h-2 rounded-full bg-wood-600"></div>
+            <div class="absolute bottom-2 right-2 w-2 h-2 rounded-full bg-wood-600"></div>
+
+            <div class="text-center px-4">
+                <span class="block text-xs font-bold text-wood-600 uppercase tracking-widest mb-1">Movimentos</span>
+                <span id="moves" class="text-3xl font-western text-parchment-100">0</span>
+            </div>
+            <div class="text-center px-4 border-l border-wood-700">
+                <span class="block text-xs font-bold text-wood-600 uppercase tracking-widest mb-1">Pares</span>
+                <span id="pairs" class="text-3xl font-western text-gold-500">0</span>
+            </div>
+            <div class="text-center border-l border-wood-700 pl-6 flex items-center">
+                <button onclick="restartGame()" class="bg-wood-700 hover:bg-wood-600 text-parchment-100 p-2 rounded-sm border border-wood-600 transition-colors shadow-lg" title="Reiniciar">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Tabuleiro do Jogo -->
+    <main class="w-full max-w-4xl">
+        <!-- Grid: Ajusta automaticamente se tiver muitas cartas -->
+        <div id="game-board" class="grid grid-cols-4 md:grid-cols-6 gap-3 w-full auto-rows-fr p-4 bg-wood-900 bg-opacity-50 rounded-lg border border-wood-800 shadow-inner">
+            <!-- As cartas serão geradas via JavaScript -->
+        </div>
+    </main>
+
+    <!-- Modal de Vitória -->
+    <div id="win-modal" class="fixed inset-0 bg-black bg-opacity-80 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="modal-content bg-parchment-100 rounded-sm p-8 text-center max-w-sm w-full shadow-2xl border-4 border-wood-800 relative">
+            <!-- Efeito de cartaz pregado -->
+            <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 w-4 h-4 rounded-full bg-gray-800 shadow-sm border border-black"></div>
+
+            <div class="w-20 h-20 bg-wood-800 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-wood-600">
+                <span class="text-4xl">🤠</span>
+            </div>
+            <h2 class="text-4xl font-western text-wood-900 mb-2">MISSÃO CUMPRIDA!</h2>
+            <p class="text-wood-800 mb-6 font-typewriter font-bold">O bando dos Guri foi capturado.</p>
+            
+            <div class="bg-wood-200 border border-wood-300 rounded-sm p-4 mb-6 relative">
+                <p class="text-xs font-bold text-wood-600 uppercase tracking-widest">Total de Movimentos</p>
+                <p id="final-moves" class="text-3xl font-western text-wood-900">0</p>
+            </div>
+
+            <button onclick="restartGame()" class="w-full bg-wood-800 hover:bg-wood-700 text-gold-500 font-western text-xl py-3 px-6 rounded-sm transition-transform hover:scale-105 border-2 border-wood-900 shadow-lg">
+                NOVA RODADA
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURAÇÃO ---
+        
+        // IMAGEM DO VERSO DAS CARTAS (Capa)
+        // INSTRUÇÃO GITHUB PAGES:
+        // 1. Crie uma pasta chamada 'img' no seu repositório.
+        // 2. Coloque sua imagem de capa lá (ex: capa.png).
+        // 3. Mude a linha abaixo para: const cardBackImage = './img/capa.png';
+        const cardBackImage = 'https://cdn-icons-png.flaticon.com/512/3063/3063820.png'; 
+        
+        // IMAGENS DAS CARTAS (Frente)
+        // INSTRUÇÃO GITHUB PAGES:
+        // 1. Coloque as fotos dos seus amigos na pasta 'img'.
+        // 2. Substitua os links abaixo pelos nomes dos arquivos, exemplo:
+        // { type: 'image', content: './img/joao.jpg' },
+        // { type: 'image', content: './img/maria.jpg' },
+        
+        const cardItems = [
+            { type: 'image', content: 'https://images.unsplash.com/photo-1533738363-b7f9aef128ce?w=400&h=400&fit=crop' },
+            { type: 'image', content: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400&h=400&fit=crop' },
+            { type: 'image', content: 'https://images.unsplash.com/photo-1518791841217-8f162f1e1131?w=400&h=400&fit=crop' },
+            { type: 'image', content: 'https://images.unsplash.com/photo-1495360019602-e05980bf549a?w=400&h=400&fit=crop' },
+            { type: 'image', content: 'https://images.unsplash.com/photo-1511044568932-338cba0fb803?w=400&h=400&fit=crop' },
+            { type: 'image', content: 'https://images.unsplash.com/photo-1494256997604-0e105c143718?w=400&h=400&fit=crop' },
+            { type: 'image', content: 'https://images.unsplash.com/photo-1517849845537-4d257902454a?w=400&h=400&fit=crop' },
+            { type: 'image', content: 'https://images.unsplash.com/photo-1507146426996-ef05306b995a?w=400&h=400&fit=crop' },
+            { type: 'image', content: 'https://images.unsplash.com/photo-1561948955-570b270e7c36?w=400&h=400&fit=crop' },
+            { type: 'image', content: 'https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=400&h=400&fit=crop' },
+            { type: 'image', content: 'https://images.unsplash.com/photo-1525957186066-d7955815e9de?w=400&h=400&fit=crop' },
+            { type: 'image', content: 'https://images.unsplash.com/photo-1452857297128-d9c29adba80b?w=400&h=400&fit=crop' }
+        ];
+
+        // --- LÓGICA DO JOGO ---
+        
+        let cards = [];
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let moves = 0;
+        let lockBoard = false;
+        const totalPairs = cardItems.length;
+
+        const boardElement = document.getElementById('game-board');
+        const movesElement = document.getElementById('moves');
+        const pairsElement = document.getElementById('pairs');
+        const modalElement = document.getElementById('win-modal');
+        const finalMovesElement = document.getElementById('final-moves');
+
+        // Ajustar o Grid baseados no número de cartas
+        function adjustGrid() {
+            const totalCards = cardItems.length * 2;
+            boardElement.className = 'grid gap-3 w-full auto-rows-fr p-4 bg-wood-900 bg-opacity-50 rounded-lg border border-wood-800 shadow-inner';
+            
+            // Lógica simples para definir colunas
+            if (totalCards <= 16) {
+                boardElement.classList.add('grid-cols-4');
+            } else if (totalCards <= 24) {
+                boardElement.classList.add('grid-cols-4', 'md:grid-cols-6');
+            } else {
+                boardElement.classList.add('grid-cols-5', 'md:grid-cols-8');
+            }
+        }
+
+        function initGame() {
+            adjustGrid();
+            
+            // Resetar variáveis
+            matchedPairs = 0;
+            moves = 0;
+            flippedCards = [];
+            lockBoard = false;
+            updateStats();
+            modalElement.classList.add('hidden');
+
+            // Duplicar e embaralhar itens
+            const gameDeck = [...cardItems, ...cardItems];
+            shuffleArray(gameDeck);
+
+            // Limpar tabuleiro e gerar HTML
+            boardElement.innerHTML = '';
+            
+            gameDeck.forEach((item, index) => {
+                const card = createCardElement(item, index);
+                boardElement.appendChild(card);
+            });
+        }
+
+        function createCardElement(item, index) {
+            const card = document.createElement('div');
+            // Altura responsiva
+            card.classList.add('card', 'h-24', 'md:h-32'); 
+            card.dataset.index = index;
+            card.dataset.content = item.content;
+
+            // Conteúdo da parte de trás (o que é revelado - a "cara" da carta)
+            let backContent = '';
+            if (item.type === 'image') {
+                // Filtro sepia para combinar com o tema
+                backContent = `<img src="${item.content}" class="w-full h-full object-cover pointer-events-none sepia-img" alt="Memory Card">`;
+            } else {
+                backContent = `<span class="text-4xl md:text-5xl text-wood-900">${item.content}</span>`;
+            }
+
+            // Conteúdo da frente (o verso, o que se vê primeiro)
+            // Aqui usamos a imagem definida na variável cardBackImage
+            const frontContent = `<img src="${cardBackImage}" class="w-2/3 h-2/3 object-contain opacity-80 pointer-events-none" alt="Capa">`;
+
+            card.innerHTML = `
+                <div class="card-inner">
+                    <div class="card-front">
+                        ${frontContent}
+                    </div>
+                    <div class="card-back">
+                        ${backContent}
+                    </div>
+                </div>
+            `;
+
+            card.addEventListener('click', () => flipCard(card));
+            return card;
+        }
+
+        function flipCard(card) {
+            if (lockBoard) return;
+            if (card.classList.contains('flipped')) return;
+            if (flippedCards.length === 1 && flippedCards[0] === card) return;
+
+            card.classList.add('flipped');
+            flippedCards.push(card);
+
+            if (flippedCards.length === 2) {
+                checkForMatch();
+            }
+        }
+
+        function checkForMatch() {
+            lockBoard = true;
+            moves++;
+            updateStats();
+
+            const [card1, card2] = flippedCards;
+            const isMatch = card1.dataset.content === card2.dataset.content;
+
+            if (isMatch) {
+                disableCards();
+            } else {
+                unflipCards();
+            }
+        }
+
+        function disableCards() {
+            flippedCards.forEach(card => card.classList.add('matched'));
+            matchedPairs++;
+            updateStats();
+            
+            flippedCards = [];
+            lockBoard = false;
+
+            if (matchedPairs === totalPairs) {
+                setTimeout(showWinModal, 600);
+            }
+        }
+
+        function unflipCards() {
+            setTimeout(() => {
+                flippedCards.forEach(card => card.classList.remove('flipped'));
+                flippedCards = [];
+                lockBoard = false;
+            }, 1000);
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function updateStats() {
+            movesElement.textContent = moves;
+            pairsElement.textContent = `${matchedPairs} / ${totalPairs}`;
+        }
+
+        function showWinModal() {
+            finalMovesElement.textContent = moves;
+            modalElement.classList.remove('hidden');
+        }
+
+        function restartGame() {
+            initGame();
+        }
+
+        // Iniciar o jogo
+        initGame();
+
+    </script>
+</body>
+</html>
