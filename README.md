@@ -3,7 +3,7 @@
 Esse é um jogo da memória temático do Velho Oeste feito pra passar o tempo. O objetivo é simples: encontrar todos os pares de cartas no menor número de movimentos possível.
 
 
-🎮 CLIQUE AQUI PARA JOGAR [https://gritaria.github.io/memoria/]
+🎮 (CLIQUE AQUI PARA JOGAR)[https://gritaria.github.io/memoria/]
 
 ⚠️ Aviso: Aqui nesse repositório é só o código (não tem nada que interesse pra quem quer só brincar). O jogo de verdade tu acessa no link acima!
 
